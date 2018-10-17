@@ -10,7 +10,6 @@ import org.pac4j.core.context.HttpConstants;
 import org.pac4j.core.credentials.TokenCredentials;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.http.client.direct.HeaderClient;
-import org.pac4j.play.deadbolt2.Pac4jHandlerCache;
 import org.pac4j.play.deadbolt2.Pac4jRoleHandler;
 import org.pac4j.play.http.DefaultHttpActionAdapter;
 import org.pac4j.play.store.PlayCookieSessionStore;
@@ -18,6 +17,7 @@ import org.pac4j.play.store.PlaySessionStore;
 import org.taymyr.hello.api.HelloService;
 import org.taymyr.hello.auth.HelloAuthorizedRoutes;
 import org.taymyr.hello.auth.HelloCustomRoleHandler;
+import org.taymyr.hello.auth.HelloPac4jHandlerCache;
 
 import javax.inject.Singleton;
 
@@ -34,7 +34,7 @@ public class HelloModule extends AbstractModule implements ServiceGuiceSupport {
     bind(AuthorizedRoutes.class).to(HelloAuthorizedRoutes.class).in(Singleton.class);
 
     bind(Pac4jRoleHandler.class).to(HelloCustomRoleHandler.class);
-    bind(HandlerCache.class).to(Pac4jHandlerCache.class);
+    bind(HandlerCache.class).to(HelloPac4jHandlerCache.class);
   }
 
   @Provides
