@@ -8,24 +8,37 @@ import com.lightbend.lagom.javadsl.api.broker.Topic;
 import com.lightbend.lagom.javadsl.broker.TopicProducer;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRef;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
-
-import java.util.Optional;
-
-import javax.inject.Inject;
+import org.pac4j.core.authorization.authorizer.Authorizer;
+import org.pac4j.core.config.Config;
+import org.pac4j.core.profile.CommonProfile;
+import org.pac4j.oidc.profile.keycloak.KeycloakOidcProfile;
 import org.taymyr.hello.api.GreetingMessage;
 import org.taymyr.hello.api.HelloService;
-import org.taymyr.hello.impl.HelloCommand.*;
+import org.taymyr.hello.impl.HelloCommand.Hello;
+import org.taymyr.hello.impl.HelloCommand.UseGreetingMessage;
+
+import javax.inject.Inject;
+
+import static org.pac4j.lagom.Authorizers.and;
+import static org.pac4j.lagom.Authorizers.anyRole;
+import static org.pac4j.lagom.Authorizers.authenticated;
+import static org.pac4j.lagom.Authorizers.typed;
+
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
  * Implementation of the HelloService.
  */
-public class HelloServiceImpl implements HelloService {
+public class HelloServiceImpl implements HelloService, SecuredService {
 
   private final PersistentEntityRegistry persistentEntityRegistry;
 
+  private final Config securityConfig;
+
   @Inject
-  public HelloServiceImpl(PersistentEntityRegistry persistentEntityRegistry) {
+  public HelloServiceImpl(PersistentEntityRegistry persistentEntityRegistry, Config securityConfig) {
     this.persistentEntityRegistry = persistentEntityRegistry;
+    this.securityConfig = securityConfig;
     persistentEntityRegistry.register(HelloEntity.class);
   }
 
@@ -78,5 +91,22 @@ public class HelloServiceImpl implements HelloService {
         return Pair.create(eventToPublish, eventAndOffset.second());
       })
     );
+  }
+
+  @Override
+  public ServiceCall<NotUsed, String> securedHello() {
+    Authorizer<CommonProfile> authorizer = and(
+            authenticated(),
+            typed(KeycloakOidcProfile.class),
+            anyRole("uma_authorization")
+    );
+    return authorize(authorizer, profile ->
+            request -> completedFuture("Hello, " + profile.getId())
+    );
+  }
+
+  @Override
+  public Config getSecurityConfig() {
+    return securityConfig;
   }
 }

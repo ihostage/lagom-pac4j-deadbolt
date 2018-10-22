@@ -1,9 +1,5 @@
 package org.taymyr.hello.api;
 
-import static com.lightbend.lagom.javadsl.api.Service.named;
-import static com.lightbend.lagom.javadsl.api.Service.pathCall;
-import static com.lightbend.lagom.javadsl.api.Service.topic;
-
 import akka.Done;
 import akka.NotUsed;
 import com.lightbend.lagom.javadsl.api.Descriptor;
@@ -11,6 +7,10 @@ import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.broker.Topic;
 import com.lightbend.lagom.javadsl.api.broker.kafka.KafkaProperties;
+
+import static com.lightbend.lagom.javadsl.api.Service.named;
+import static com.lightbend.lagom.javadsl.api.Service.pathCall;
+import static com.lightbend.lagom.javadsl.api.Service.topic;
 
 /**
  * The Hello service interface.
@@ -32,6 +32,11 @@ public interface HelloService extends Service {
    */
   ServiceCall<GreetingMessage, Done> useGreeting(String id);
 
+  /**
+   * Create JWT or COPY from this page -> https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.FxjMbQiFZzg_H35AzTfTg3pxVAy_uOh0NsQDS__HA-g
+   * Example: curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.FxjMbQiFZzg_H35AzTfTg3pxVAy_uOh0NsQDS__HA-g" http://localhost:9000/api/secured_hello
+   */
+  ServiceCall<NotUsed, String> securedHello();
 
   /**
    * This gets published to Kafka.
@@ -43,7 +48,8 @@ public interface HelloService extends Service {
     // @formatter:off
     return named("hello").withCalls(
         pathCall("/api/hello/:id",  this::hello),
-        pathCall("/api/hello/:id", this::useGreeting)
+        pathCall("/api/hello/:id", this::useGreeting),
+        pathCall("/api/secured_hello", this::securedHello)
       ).withTopics(
           topic("hello-events", this::helloEvents)
           // Kafka partitions messages, messages within the same partition will
